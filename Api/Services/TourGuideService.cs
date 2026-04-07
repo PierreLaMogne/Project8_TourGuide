@@ -16,6 +16,7 @@ public class TourGuideService : ITourGuideService
     private readonly IGpsUtil _gpsUtil;
     private readonly IRewardsService _rewardsService;
     private readonly TripPricer.TripPricer _tripPricer;
+    private readonly RewardCentral.RewardCentral _rewardCentral;
     public Tracker Tracker { get; private set; }
     private readonly Dictionary<string, User> _internalUserMap = new();
     private const string TripPricerApiKey = "test-server-api-key";
@@ -25,6 +26,7 @@ public class TourGuideService : ITourGuideService
     {
         _logger = logger;
         _tripPricer = new();
+        _rewardCentral = new();
         _gpsUtil = gpsUtil;
         _rewardsService = rewardsService;
 
@@ -90,16 +92,22 @@ public class TourGuideService : ITourGuideService
         return visitedLocation;
     }
 
-    public List<Attraction> GetNearByAttractions(VisitedLocation visitedLocation)
+    public List<NearbyAttraction> GetNearbyAttractions(User user)
     {
-        List<Attraction> nearbyAttractions = new ();
-        foreach (var attraction in _gpsUtil.GetAttractions())
-        {
-            if (_rewardsService.IsWithinAttractionProximity(attraction, visitedLocation.Location))
-            {
-                nearbyAttractions.Add(attraction);
-            }
-        }
+        var visitedLocation = GetUserLocation(user);
+        List<Attraction> allAttractions = _gpsUtil.GetAttractions();
+
+        List<NearbyAttraction> nearbyAttractions = allAttractions
+            .Select(attraction => new NearbyAttraction(
+                attraction.AttractionName,
+                attraction,
+                visitedLocation.Location,
+                _rewardsService.GetDistance(visitedLocation.Location, attraction),
+                _rewardCentral.GetAttractionRewardPoints(user.UserId, attraction.AttractionId)
+            ))
+            .OrderBy(nearbyAttraction => nearbyAttraction.Distance)
+            .Take(5)
+            .ToList();
 
         return nearbyAttractions;
     }
