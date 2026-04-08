@@ -20,7 +20,11 @@ public class TourGuideController : ControllerBase
     [HttpGet("getLocation")]
     public ActionResult<VisitedLocation> GetLocation([FromQuery] string userName)
     {
-        var location = _tourGuideService.GetUserLocation(GetUser(userName));
+        var user = _tourGuideService.GetUser(userName);
+        if (user == null)
+            return NotFound($"User '{userName}' not found.");
+
+        var location = _tourGuideService.GetUserLocation(user);
         return Ok(location);
     }
 
@@ -37,6 +41,9 @@ public class TourGuideController : ControllerBase
     public ActionResult<List<Attraction>> GetNearbyAttractions([FromQuery] string userName)
     {
         var user = _tourGuideService.GetUser(userName);
+        if (user == null)
+            return NotFound($"User '{userName}' not found.");
+
         var nearbyAttractions = _tourGuideService.GetNearbyAttractions(user);
         return Ok(nearbyAttractions);
     }
@@ -44,14 +51,22 @@ public class TourGuideController : ControllerBase
     [HttpGet("getRewards")]
     public ActionResult<List<UserReward>> GetRewards([FromQuery] string userName)
     {
-        var rewards = _tourGuideService.GetUserRewards(GetUser(userName));
+        var user = _tourGuideService.GetUser(userName);
+        if (user == null)
+            return NotFound($"User '{userName}' not found.");
+
+        var rewards = _tourGuideService.GetUserRewards(user);
         return Ok(rewards);
     }
 
     [HttpGet("getTripDeals")]
     public ActionResult<List<Provider>> GetTripDeals([FromQuery] string userName)
     {
-        var deals = _tourGuideService.GetTripDeals(GetUser(userName));
+        var user = _tourGuideService.GetUser(userName);
+        if (user == null)
+            return NotFound($"User '{userName}' not found.");
+
+        var deals = _tourGuideService.GetTripDeals(user);
         return Ok(deals);
     }
 
