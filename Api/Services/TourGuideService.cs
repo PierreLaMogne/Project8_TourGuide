@@ -16,6 +16,7 @@ public class TourGuideService : ITourGuideService
     private readonly IGpsUtil _gpsUtil;
     private readonly IRewardsService _rewardsService;
     private readonly TripPricer.TripPricer _tripPricer;
+    private readonly RewardCentral.RewardCentral _rewardCentral;
     public Tracker Tracker { get; private set; }
     private readonly Dictionary<string, User> _internalUserMap = new();
     private const string TripPricerApiKey = "test-server-api-key";
@@ -25,6 +26,7 @@ public class TourGuideService : ITourGuideService
     {
         _logger = logger;
         _tripPricer = new();
+        _rewardCentral = new();
         _gpsUtil = gpsUtil;
         _rewardsService = rewardsService;
 
@@ -49,9 +51,9 @@ public class TourGuideService : ITourGuideService
         return user.UserRewards;
     }
 
-    public VisitedLocation GetUserLocation(User user)
+    public async Task<VisitedLocation> GetUserLocation(User user) // Method changed to go asynchronous do to TrackUserLocation being asynchronous
     {
-        return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : TrackUserLocation(user);
+        return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : await TrackUserLocation(user);
     }
 
     public User GetUser(string userName)
@@ -82,24 +84,35 @@ public class TourGuideService : ITourGuideService
         return providers;
     }
 
-    public VisitedLocation TrackUserLocation(User user)
+    public async Task<VisitedLocation> TrackUserLocation(User user) // Method changed to go asynchronous do to GetUserLocation and CalculateRewards being asynchronous
     {
-        VisitedLocation visitedLocation = _gpsUtil.GetUserLocation(user.UserId);
+        VisitedLocation visitedLocation = await _gpsUtil.GetUserLocation(user.UserId);
         user.AddToVisitedLocations(visitedLocation);
-        _rewardsService.CalculateRewards(user);
+        await _rewardsService.CalculateRewards(user);
         return visitedLocation;
     }
 
-    public List<Attraction> GetNearByAttractions(VisitedLocation visitedLocation)
+    /// <summary>
+    /// Method changed to go asynchronous do to GetUserLocation and CalculateRewards being asynchronous
+    /// Now retunring a List of newly created NearbyAttraction objects that contains informations required by the user
+    /// Has User as parameter to get the calculate rewards points for each attraction (meaning GetUserLocation is used into this method and no longer in the Controller)
+    /// </summary>
+    public async Task<List<NearbyAttraction>> GetNearbyAttractions(User user)
     {
-        List<Attraction> nearbyAttractions = new ();
-        foreach (var attraction in _gpsUtil.GetAttractions())
-        {
-            if (_rewardsService.IsWithinAttractionProximity(attraction, visitedLocation.Location))
-            {
-                nearbyAttractions.Add(attraction);
-            }
-        }
+        var visitedLocation = await GetUserLocation(user);
+        List<Attraction> allAttractions = await _gpsUtil.GetAttractions();
+
+        List<NearbyAttraction> nearbyAttractions = allAttractions
+            .Select(attraction => new NearbyAttraction(
+                attraction.AttractionName,
+                attraction,
+                visitedLocation.Location,
+                _rewardsService.GetDistance(visitedLocation.Location, attraction),
+                _rewardCentral.GetAttractionRewardPoints(attraction.AttractionId, user.UserId)
+            ))
+            .OrderBy(nearbyAttraction => nearbyAttraction.Distance)
+            .Take(5)
+            .ToList();
 
         return nearbyAttractions;
     }

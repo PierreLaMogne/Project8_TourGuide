@@ -17,7 +17,7 @@ public class TripPricer
         // Sleep to simulate some latency
         Thread.Sleep(ThreadLocalRandom.Current.Next(1, 50));
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 10; i++) // Changing the iteration to reach 10 providers instead of 5
         {
             int multiple = ThreadLocalRandom.Current.Next(100, 700);
             double childrenDiscount = children / 3.0;
@@ -27,12 +27,8 @@ public class TripPricer
             {
                 price = 0.0;
             }
-
-            string provider;
-            do
-            {
-                provider = GetProviderName(apiKey, adults);
-            } while (providersUsed.Contains(provider));
+            
+            string provider = GetProviderName(providersUsed);
 
             providersUsed.Add(provider);
             providers.Add(new Provider(attractionId, provider, price));
@@ -40,22 +36,35 @@ public class TripPricer
         return providers;
     }
 
-    public string GetProviderName(string apiKey, int adults)
-    {
-        int multiple = ThreadLocalRandom.Current.Next(1, 10);
 
-        return multiple switch
+    /// <summary>
+    /// Changing the method to ensure that the random pick of the provider name is done form a list of unused names, avoiding repeated random picks
+    /// The provider names already used are excluded from the list thanks to a HashSet passed as parameter
+    /// Adding a check to throw an exception if there is no more unique provider name available, avoiding potential infinite loops (currently never happens due to the 10 iterations of GetPricer)
+    /// </summary>
+    public string GetProviderName(HashSet<string> alreadyUsedProviders)
+    {
+        List<string> providerNames = new List<string>
         {
-            1 => "Holiday Travels",
-            2 => "Enterprize Ventures Limited",
-            3 => "Sunny Days",
-            4 => "FlyAway Trips",
-            5 => "United Partners Vacations",
-            6 => "Dream Trips",
-            7 => "Live Free",
-            8 => "Dancing Waves Cruselines and Partners",
-            9 => "AdventureCo",
-            _ => "Cure-Your-Blues",
-        };        
+            "Holiday Travels",
+            "Enterprize Ventures Limited",
+            "Sunny Days",
+            "FlyAway Trips",
+            "United Partners Vacations",
+            "Dream Trips",
+            "Live Free",
+            "Dancing Waves Cruselines and Partners",
+            "AdventureCo",
+            "Cure-Your-Blues"
+        };
+
+        providerNames = providerNames.Where(p => !alreadyUsedProviders.Contains(p)).ToList();
+
+        if (providerNames.Count == 0)
+        {
+            throw new InvalidOperationException("No more unique providers available.");
+        }
+
+        return providerNames[ThreadLocalRandom.Current.Next(providerNames.Count)];
     }
 }

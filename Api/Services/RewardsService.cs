@@ -32,24 +32,33 @@ public class RewardsService : IRewardsService
         _proximityBuffer = _defaultProximityBuffer;
     }
 
-    public void CalculateRewards(User user)
+    /// <summary>
+    /// Method changed to go asynchronous to improve performance when calculating rewards for multiple users
+    /// Adding a rewardsToAdd List to get all the Reward to add without locking the userLocation and userReward Lists, avoiding potential concurrent modification exceptions
+    /// Tasking the reward calculation by matching directly attractions that are not rewarded and that the user visited
+    /// This beneficiates from the fact that the GetAttractions method goes asynchronous and that the reward calculation is not CPU intensive, so it goes parallel without blocking the main thread
+    /// At the end, rewards are added to the user in a single loop, avoiding potential concurrent modification exceptions and improving performance when calculating rewards for multiple users
+    /// </summary>
+
+    public async Task CalculateRewards(User user)
     {
         count++;
-        List<VisitedLocation> userLocations = user.VisitedLocations;
-        List<Attraction> attractions = _gpsUtil.GetAttractions();
+        var rewardsToAdd = new List<UserReward>();
+        List<VisitedLocation> userLocations = user.VisitedLocations.ToList();
+        List<Attraction> attractions = await _gpsUtil.GetAttractions();
 
-        foreach (var visitedLocation in userLocations)
+        var tasks = userLocations.SelectMany(visitedLocation =>
+            attractions.Where(attraction => !user.UserRewards.Any(r => r.Attraction.AttractionName == attraction.AttractionName) && NearAttraction(visitedLocation, attraction)).ToList()
+                       .Select(attraction => Task.Run(() =>
+                       {
+                            int rewardPoints = GetRewardPoints(attraction, user);
+                            rewardsToAdd.Add(new UserReward(visitedLocation, attraction, rewardPoints));
+                       })));
+        await Task.WhenAll(tasks);
+
+        foreach (var reward in rewardsToAdd)
         {
-            foreach (var attraction in attractions)
-            {
-                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == attraction.AttractionName))
-                {
-                    if (NearAttraction(visitedLocation, attraction))
-                    {
-                        user.AddUserReward(new UserReward(visitedLocation, attraction, GetRewardPoints(attraction, user)));
-                    }
-                }
-            }
+            user.AddUserReward(reward);
         }
     }
 
