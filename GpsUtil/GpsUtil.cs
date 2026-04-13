@@ -81,13 +81,13 @@ public class GpsUtil
         }
     }
 
-    private async Task SleepAsync() // Method change to go asynchronous
+    private static async Task SleepAsync() // Method change to go asynchronous
     {
         int delay = ThreadLocalRandom.Current.Next(30, 100);
         await Task.Delay(delay);
     }
 
-    private async Task SleepLighterAsync() // Method change to go asynchronous
+    private static async Task SleepLighterAsync() // Method change to go asynchronous
     {
         await Task.Delay(10);
     }

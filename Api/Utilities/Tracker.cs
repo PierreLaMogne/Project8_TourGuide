@@ -5,7 +5,7 @@ using TourGuide.Users;
 
 namespace TourGuide.Utilities;
 
-public class Tracker
+public class Tracker : IDisposable
 {
     private readonly ILogger<Tracker> _logger;
     private static readonly TimeSpan TrackingPollingInterval = TimeSpan.FromMinutes(5);
@@ -25,6 +25,12 @@ public class Tracker
         _cancellationTokenSource.Cancel();
     }
 
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+    }
+
     public async Task Run()
     {
         var stopwatch = new Stopwatch();
@@ -32,7 +38,7 @@ public class Tracker
         while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
             List<User> users = _tourGuideService.GetAllUsers();
-            _logger.LogDebug($"Begin Tracker. Tracking {users.Count} users.");
+            _logger.LogDebug("Begin Tracker. Tracking {UserCount} users.", users.Count);
 
             stopwatch.Start();
 
@@ -40,7 +46,7 @@ public class Tracker
 
             stopwatch.Stop();
 
-            _logger.LogDebug($"Tracker Time Elapsed: {stopwatch.ElapsedMilliseconds / 1000.0} seconds.");
+            _logger.LogDebug("Tracker Time Elapsed: {ElapsedSeconds} seconds.", stopwatch.ElapsedMilliseconds / 1000.0);
 
             stopwatch.Reset();
 
