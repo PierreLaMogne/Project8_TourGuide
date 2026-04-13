@@ -9,11 +9,10 @@ namespace RewardCentral;
 
 public class RewardCentral
 {
-    // Method changed to go asynchronous to improve performance when calculating rewards for multiple users
-    public static async Task<int> GetAttractionRewardPoints(Guid attractionId, Guid userId) 
+    public int GetAttractionRewardPoints(Guid attractionId, Guid userId)
     {
         int randomDelay = new Random().Next(1, 1000);
-        await Task.Delay(randomDelay);
+        Thread.Sleep(randomDelay);
 
         int randomInt = new Random().Next(1, 1000);
         return randomInt;
