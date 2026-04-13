@@ -32,6 +32,14 @@ public class RewardsService : IRewardsService
         _proximityBuffer = _defaultProximityBuffer;
     }
 
+    /// <summary>
+    /// Method changed to go asynchronous to improve performance when calculating rewards for multiple users
+    /// Adding a rewardsToAdd List to get all the Reward to add without locking the userLocation and userReward Lists, avoiding potential concurrent modification exceptions
+    /// Tasking the reward calculation by matching directly attractions that are not rewarded and that the user visited
+    /// This beneficiates from the fact that the GetAttractions method goes asynchronous and that the reward calculation is not CPU intensive, so it goes parallel without blocking the main thread
+    /// At the end, rewards are added to the user in a single loop, avoiding potential concurrent modification exceptions and improving performance when calculating rewards for multiple users
+    /// </summary>
+
     public async Task CalculateRewards(User user)
     {
         count++;

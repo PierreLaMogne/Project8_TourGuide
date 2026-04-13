@@ -1,6 +1,6 @@
 ﻿namespace GpsUtil.Location
 {
-    public class NearbyAttraction
+    public class NearbyAttraction // Class created to match the information needed by the GetNearbyAttraction method
     {
         public string AttractionName { get; }
         public Locations AttractionLocation { get; }

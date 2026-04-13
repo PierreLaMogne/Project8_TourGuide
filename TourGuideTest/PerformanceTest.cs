@@ -45,17 +45,18 @@ namespace TourGuideTest
         }
 
         [Fact]
-        public async Task HighVolumeTrackLocation()
+        public async Task HighVolumeTrackLocation() // Method changed to go asynchronous due to TrackUserLocation being asynchronous (and the use of Task.WhenAll for better performance)
         {
             //On peut ici augmenter le nombre d'utilisateurs pour tester les performances
             _fixture.Initialize(100000);
 
-            List<User> allUsers = _fixture.TourGuideService.GetAllUsers();
+            List<User> allUsers = _fixture.TourGuideService.GetAllUsers(); 
 
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            var tasks = allUsers.Select(async user => await _fixture.TourGuideService.TrackUserLocation(user));
+            // Getting better performance by running the tracking in parallel for all users
+            var tasks = allUsers.Select(user => _fixture.TourGuideService.TrackUserLocation(user));
             await Task.WhenAll(tasks);
 
             stopWatch.Stop();
@@ -67,7 +68,7 @@ namespace TourGuideTest
         }
 
         [Fact]
-        public async Task HighVolumeGetRewards()
+        public async Task HighVolumeGetRewards() // Method changed to go asynchronous due to CalculateRewards being asynchronous (and the use of Task.WhenAll for better performance)
         {
             //On peut ici augmenter le nombre d'utilisateurs pour tester les performances
             _fixture.Initialize(100000);
@@ -75,13 +76,15 @@ namespace TourGuideTest
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            Attraction attraction = (await _fixture.GpsUtil.GetAttractions())[0];
+            Attraction attraction = (await _fixture.GpsUtil.GetAttractions())[0]; // Adding an "await" to ensure having the attractions before picking the first one for the test
             List<User> allUsers = _fixture.TourGuideService.GetAllUsers();
 
-            var tasks1 = allUsers.Select(u => Task.Run(() => u.AddToVisitedLocations(new VisitedLocation(u.UserId, attraction, DateTime.Now))));
+            // Adding visited locations for all users in parallel to improve performance
+            var tasks1 = allUsers.Select(u => Task.Run(() => u.AddToVisitedLocations(new VisitedLocation(u.UserId, attraction, DateTime.Now)))); // Using Task.Run to run the synchronous AddToVisitedLocations method in parallel for all users
             await Task.WhenAll(tasks1);
 
-            var tasks2 = allUsers.Select(u => Task.Run(() => _fixture.RewardsService.CalculateRewards(u)));
+            // Getting better performance by running the rewards calculation in parallel for all users
+            var tasks2 = allUsers.Select(u => _fixture.RewardsService.CalculateRewards(u));
             await Task.WhenAll(tasks2);
 
             foreach (var user in allUsers)

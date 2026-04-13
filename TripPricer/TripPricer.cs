@@ -17,7 +17,7 @@ public class TripPricer
         // Sleep to simulate some latency
         Thread.Sleep(ThreadLocalRandom.Current.Next(1, 50));
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++) // Changing the iteration to reach 10 providers instead of 5
         {
             int multiple = ThreadLocalRandom.Current.Next(100, 700);
             double childrenDiscount = children / 3.0;
@@ -36,6 +36,12 @@ public class TripPricer
         return providers;
     }
 
+
+    /// <summary>
+    /// Changing the method to ensure that the random pick of the provider name is done form a list of unused names, avoiding repeated random picks
+    /// The provider names already used are excluded from the list thanks to a HashSet passed as parameter
+    /// Adding a check to throw an exception if there is no more unique provider name available, avoiding potential infinite loops (currently never happens due to the 10 iterations of GetPricer)
+    /// </summary>
     public string GetProviderName(HashSet<string> alreadyUsedProviders)
     {
         List<string> providerNames = new List<string>

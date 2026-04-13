@@ -51,7 +51,7 @@ public class TourGuideService : ITourGuideService
         return user.UserRewards;
     }
 
-    public async Task<VisitedLocation> GetUserLocation(User user)
+    public async Task<VisitedLocation> GetUserLocation(User user) // Method changed to go asynchronous do to TrackUserLocation being asynchronous
     {
         return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : await TrackUserLocation(user);
     }
@@ -84,7 +84,7 @@ public class TourGuideService : ITourGuideService
         return providers;
     }
 
-    public async Task<VisitedLocation> TrackUserLocation(User user)
+    public async Task<VisitedLocation> TrackUserLocation(User user) // Method changed to go asynchronous do to GetUserLocation and CalculateRewards being asynchronous
     {
         VisitedLocation visitedLocation = await _gpsUtil.GetUserLocation(user.UserId);
         user.AddToVisitedLocations(visitedLocation);
@@ -92,6 +92,11 @@ public class TourGuideService : ITourGuideService
         return visitedLocation;
     }
 
+    /// <summary>
+    /// Method changed to go asynchronous do to GetUserLocation and CalculateRewards being asynchronous
+    /// Now retunring a List of newly created NearbyAttraction objects that contains informations required by the user
+    /// Has User as parameter to get the calculate rewards points for each attraction (meaning GetUserLocation is used into this method and no longer in the Controller)
+    /// </summary>
     public async Task<List<NearbyAttraction>> GetNearbyAttractions(User user)
     {
         var visitedLocation = await GetUserLocation(user);

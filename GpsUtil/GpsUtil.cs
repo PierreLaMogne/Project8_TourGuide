@@ -12,7 +12,7 @@ public class GpsUtil
 {
     private static readonly SemaphoreSlim rateLimiter = new(1000, 1000);
 
-    public async Task<VisitedLocation> GetUserLocation(Guid userId)
+    public async Task<VisitedLocation> GetUserLocation(Guid userId) // Method change to go asynchronous
     {
         await rateLimiter.WaitAsync();
         try
@@ -35,7 +35,7 @@ public class GpsUtil
         }
     }
 
-    public async Task<List<Attraction>> GetAttractions()
+    public async Task<List<Attraction>> GetAttractions() // Method change to go asynchronous
     {
         await rateLimiter.WaitAsync();
 
@@ -81,13 +81,13 @@ public class GpsUtil
         }
     }
 
-    private async Task SleepAsync()
+    private async Task SleepAsync() // Method change to go asynchronous
     {
         int delay = ThreadLocalRandom.Current.Next(30, 100);
         await Task.Delay(delay);
     }
 
-    private async Task SleepLighterAsync()
+    private async Task SleepLighterAsync() // Method change to go asynchronous
     {
         await Task.Delay(10);
     }

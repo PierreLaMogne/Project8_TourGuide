@@ -22,7 +22,7 @@ public class TourGuideController : ControllerBase
     {
         var user = _tourGuideService.GetUser(userName);
         if (user == null)
-            return NotFound($"User '{userName}' not found.");
+            return NotFound($"User '{userName}' not found."); // 404 security return to no longer crash the app when not using the internal user mapping system.
 
         var location = _tourGuideService.GetUserLocation(user);
         return Ok(location);
@@ -42,7 +42,7 @@ public class TourGuideController : ControllerBase
     {
         var user = _tourGuideService.GetUser(userName);
         if (user == null)
-            return NotFound($"User '{userName}' not found.");
+            return NotFound($"User '{userName}' not found."); // 404 security return to no longer crash the app when not using the internal user mapping system.
 
         var nearbyAttractions = _tourGuideService.GetNearbyAttractions(user);
         return Ok(nearbyAttractions);
@@ -53,7 +53,7 @@ public class TourGuideController : ControllerBase
     {
         var user = _tourGuideService.GetUser(userName);
         if (user == null)
-            return NotFound($"User '{userName}' not found.");
+            return NotFound($"User '{userName}' not found."); // 404 Security return to no longer crash the app when not using the internal user mapping system.
 
         var rewards = _tourGuideService.GetUserRewards(user);
         return Ok(rewards);
@@ -64,7 +64,7 @@ public class TourGuideController : ControllerBase
     {
         var user = _tourGuideService.GetUser(userName);
         if (user == null)
-            return NotFound($"User '{userName}' not found.");
+            return NotFound($"User '{userName}' not found."); // 404 Security return to no longer crash the app when not using the internal user mapping system.
 
         var deals = _tourGuideService.GetTripDeals(user);
         return Ok(deals);

@@ -19,7 +19,7 @@ public class RewardServiceTest : IClassFixture<DependencyFixture>
     }
 
     [Fact]
-    public async Task UserGetRewards()
+    public async Task UserGetRewards() // Method going asynchronous due to GetAttractions() and TrackUserLocation() being asynchronous
     {
         _fixture.Initialize(0);
         var user = new User(Guid.NewGuid(), "jon", "000", "jon@tourGuide.com");
@@ -32,14 +32,14 @@ public class RewardServiceTest : IClassFixture<DependencyFixture>
     }
 
     [Fact]
-    public async Task IsWithinAttractionProximity()
+    public async Task IsWithinAttractionProximity() // Method going asynchronous due to GetAttractions() being asynchronous
     {
         var attraction = (await _fixture.GpsUtil.GetAttractions()).First();
         Assert.True(_fixture.RewardsService.IsWithinAttractionProximity(attraction, attraction));
     }
 
     [Fact]
-    public async Task NearAllAttractions()
+    public async Task NearAllAttractions() // Method going asynchronous due to CalculateRewards() and GetAttractions() being asynchronous
     {
         _fixture.Initialize(1);
         _fixture.RewardsService.SetProximityBuffer(int.MaxValue);
