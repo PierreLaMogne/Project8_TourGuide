@@ -1,4 +1,5 @@
 ﻿using GpsUtil.Location;
+using System.Collections.Concurrent;
 using TourGuide.LibrairiesWrappers.Interfaces;
 using TourGuide.Services.Interfaces;
 using TourGuide.Users;
@@ -34,7 +35,7 @@ public class RewardsService : IRewardsService
 
     /// <summary>
     /// Method changed to go asynchronous to improve performance when calculating rewards for multiple users
-    /// Adding a rewardsToAdd List to get all the Reward to add without locking the userLocation and userReward Lists, avoiding potential concurrent modification exceptions
+    /// Adding a rewardsToAdd ConcurrentBag to get all the Reward to add without locking the userLocation and userReward Lists, avoiding potential concurrent modification exceptions
     /// Tasking the reward calculation by matching directly attractions that are not rewarded and that the user visited
     /// This beneficiates from the fact that the GetAttractions method goes asynchronous and that the reward calculation is not CPU intensive, so it goes parallel without blocking the main thread
     /// At the end, rewards are added to the user in a single loop, avoiding potential concurrent modification exceptions and improving performance when calculating rewards for multiple users
@@ -43,12 +44,12 @@ public class RewardsService : IRewardsService
     public async Task CalculateRewards(User user)
     {
         count++;
-        var rewardsToAdd = new List<UserReward>();
+        var rewardsToAdd = new ConcurrentBag<UserReward>();
         List<VisitedLocation> userLocations = user.VisitedLocations.ToList();
         List<Attraction> attractions = await _gpsUtil.GetAttractions();
 
         var tasks = userLocations.SelectMany(visitedLocation =>
-            attractions.Where(attraction => !user.UserRewards.Any(r => r.Attraction.AttractionName == attraction.AttractionName) && NearAttraction(visitedLocation, attraction)).ToList()
+            attractions.Where(attraction => !user.UserRewards.Any(r => r.Attraction.AttractionName == attraction.AttractionName) && NearAttraction(visitedLocation, attraction))
                        .Select(attraction => Task.Run(() =>
                        {
                             int rewardPoints = GetRewardPoints(attraction, user);
