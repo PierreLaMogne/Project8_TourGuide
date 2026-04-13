@@ -10,7 +10,7 @@ using TripPricer;
 
 namespace TourGuide.Services;
 
-public class TourGuideService : ITourGuideService
+public class TourGuideService : ITourGuideService, IDisposable
 {
     private readonly ILogger _logger;
     private readonly IGpsUtil _gpsUtil;
@@ -20,7 +20,7 @@ public class TourGuideService : ITourGuideService
     public Tracker Tracker { get; private set; }
     private readonly Dictionary<string, User> _internalUserMap = new();
     private const string TripPricerApiKey = "test-server-api-key";
-    private bool _testMode = true;
+    private readonly bool _testMode = true;
 
     public TourGuideService(ILogger<TourGuideService> logger, IGpsUtil gpsUtil, IRewardsService rewardsService, ILoggerFactory loggerFactory)
     {
@@ -121,6 +121,11 @@ public class TourGuideService : ITourGuideService
     {
         AppDomain.CurrentDomain.ProcessExit += (sender, e) => Tracker.StopTracking();
     }
+    public void Dispose()
+    {
+        Tracker?.StopTracking();
+        Tracker?.Dispose();
+    }
 
     /**********************************************************************************
     * 
@@ -138,7 +143,7 @@ public class TourGuideService : ITourGuideService
             _internalUserMap.Add(userName, user);
         }
 
-        _logger.LogDebug($"Created {InternalTestHelper.GetInternalUserNumber()} internal test users.");
+        _logger.LogDebug("Created {InternalUserCount} internal test users.", InternalTestHelper.GetInternalUserNumber());
     }
 
     private void GenerateUserLocationHistory(User user)
@@ -152,18 +157,18 @@ public class TourGuideService : ITourGuideService
 
     private static readonly Random random = new Random();
 
-    private double GenerateRandomLongitude()
+    private static double GenerateRandomLongitude()
     {
-        return new Random().NextDouble() * (180 - (-180)) + (-180);
+        return random.NextDouble() * (180 - (-180)) + (-180);
     }
 
-    private double GenerateRandomLatitude()
+    private static double GenerateRandomLatitude()
     {
-        return new Random().NextDouble() * (90 - (-90)) + (-90);
+        return random.NextDouble() * (90 - (-90)) + (-90);
     }
 
-    private DateTime GetRandomTime()
+    private static DateTime GetRandomTime()
     {
-        return DateTime.UtcNow.AddDays(-new Random().Next(30));
+        return DateTime.UtcNow.AddDays(-random.Next(30));
     }
 }
