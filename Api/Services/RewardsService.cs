@@ -32,24 +32,25 @@ public class RewardsService : IRewardsService
         _proximityBuffer = _defaultProximityBuffer;
     }
 
-    public void CalculateRewards(User user)
+    public async Task CalculateRewards(User user)
     {
         count++;
+        var rewardsToAdd = new List<UserReward>();
         List<VisitedLocation> userLocations = user.VisitedLocations.ToList();
-        List<Attraction> attractions = _gpsUtil.GetAttractions();
+        List<Attraction> attractions = await _gpsUtil.GetAttractions();
 
-        foreach (var visitedLocation in userLocations)
+        var tasks = userLocations.SelectMany(visitedLocation =>
+            attractions.Where(attraction => !user.UserRewards.Any(r => r.Attraction.AttractionName == attraction.AttractionName) && NearAttraction(visitedLocation, attraction)).ToList()
+                       .Select(attraction => Task.Run(() =>
+                       {
+                            int rewardPoints = GetRewardPoints(attraction, user);
+                            rewardsToAdd.Add(new UserReward(visitedLocation, attraction, rewardPoints));
+                       })));
+        await Task.WhenAll(tasks);
+
+        foreach (var reward in rewardsToAdd)
         {
-            foreach (var attraction in attractions)
-            {
-                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == attraction.AttractionName))
-                {
-                    if (NearAttraction(visitedLocation, attraction))
-                    {
-                        user.AddUserReward(new UserReward(visitedLocation, attraction, GetRewardPoints(attraction, user)));
-                    }
-                }
-            }
+            user.AddUserReward(reward);
         }
     }
 
