@@ -28,7 +28,7 @@ public class TourGuideController : ControllerBase
         return Ok(location);
     }
 
-    // DONE: Change this method to no longer return a List of Attractions.
+    // TODO: Change this method to no longer return a List of Attractions.
     // Instead: Get the closest five tourist attractions to the user - no matter how far away they are.
     // Return a new JSON object that contains:
     // Name of Tourist attraction, 
