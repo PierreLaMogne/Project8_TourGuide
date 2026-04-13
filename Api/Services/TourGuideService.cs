@@ -51,9 +51,9 @@ public class TourGuideService : ITourGuideService
         return user.UserRewards;
     }
 
-    public VisitedLocation GetUserLocation(User user)
+    public async Task<VisitedLocation> GetUserLocation(User user)
     {
-        return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : TrackUserLocation(user);
+        return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : await TrackUserLocation(user);
     }
 
     public User GetUser(string userName)
@@ -84,18 +84,18 @@ public class TourGuideService : ITourGuideService
         return providers;
     }
 
-    public VisitedLocation TrackUserLocation(User user)
+    public async Task<VisitedLocation> TrackUserLocation(User user)
     {
-        VisitedLocation visitedLocation = _gpsUtil.GetUserLocation(user.UserId);
+        VisitedLocation visitedLocation = await _gpsUtil.GetUserLocation(user.UserId);
         user.AddToVisitedLocations(visitedLocation);
-        _rewardsService.CalculateRewards(user);
+        await _rewardsService.CalculateRewards(user);
         return visitedLocation;
     }
 
-    public List<NearbyAttraction> GetNearbyAttractions(User user)
+    public async Task<List<NearbyAttraction>> GetNearbyAttractions(User user)
     {
-        var visitedLocation = GetUserLocation(user);
-        List<Attraction> allAttractions = _gpsUtil.GetAttractions();
+        var visitedLocation = await GetUserLocation(user);
+        List<Attraction> allAttractions = await _gpsUtil.GetAttractions();
 
         List<NearbyAttraction> nearbyAttractions = allAttractions
             .Select(attraction => new NearbyAttraction(
@@ -103,7 +103,7 @@ public class TourGuideService : ITourGuideService
                 attraction,
                 visitedLocation.Location,
                 _rewardsService.GetDistance(visitedLocation.Location, attraction),
-                _rewardCentral.GetAttractionRewardPoints(user.UserId, attraction.AttractionId)
+                _rewardCentral.GetAttractionRewardPoints(attraction.AttractionId, user.UserId)
             ))
             .OrderBy(nearbyAttraction => nearbyAttraction.Distance)
             .Take(5)
