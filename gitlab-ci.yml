@@ -1,0 +1,64 @@
+stages:
+  - build
+  - test
+  - package
+
+variables:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+  RUN_PERFORMANCE_TESTS: "false"
+
+cache:
+  key:
+    files:
+      - TourGuide.sln
+      - "**/*.csproj"
+  paths:
+    - .nuget/packages/
+    - "**/bin/"
+    - "**/obj/"
+
+build:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:7.0
+  script:
+    - dotnet build TourGuide.sln --configuration Debug
+
+test_rapide:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:7.0
+  script:
+    - dotnet test TourGuideTest --filter "FullyQualifiedName!~PerformanceTest" --configuration Debug --no-build
+  needs:
+    - build
+
+test_performance:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:7.0
+  script:
+    - dotnet test TourGuideTest --filter "FullyQualifiedName~PerformanceTest" --configuration Debug --no-build
+  rules:
+    - if: '$RUN_PERFORMANCE_TESTS == "true"'
+      when: always
+    - when: never
+  needs:
+    - build
+
+package:
+  stage: package
+  image: mcr.microsoft.com/dotnet/sdk:7.0
+  script:
+    # Installe zip si nécessaire
+    - apt-get update && apt-get install -y zip
+    # Crée un dossier temporaire pour regrouper les DLL
+    - mkdir -p PublishDLLs
+    # Copie les DLL depuis chaque projet ; ajustez les chemins si nécessaire
+    - find . -type f -name "*.dll" -path "*/bin/Debug/net7.0/*" -exec cp {} PublishDLLs/ \;
+    # Archive les DLL dans un zip
+    - zip -r TourGuide_DLLs.zip PublishDLLs
+  artifacts:
+    paths:
+      - TourGuide_DLLs.zip
+    expire_in: 1 week
+  needs:
+    - build
