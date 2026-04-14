@@ -38,13 +38,13 @@ public class TourGuideController : ControllerBase
     // The reward points for visiting each Attraction.
     //    Note: Attraction reward points can be gathered from RewardsCentral
     [HttpGet("getNearbyAttractions")]
-    public ActionResult<List<Attraction>> GetNearbyAttractions([FromQuery] string userName)
+    public async Task<ActionResult<List<NearbyAttraction>>> GetNearbyAttractions([FromQuery] string userName)
     {
         var user = _tourGuideService.GetUser(userName);
         if (user == null)
             return NotFound($"User '{userName}' not found."); // 404 security return to no longer crash the app when not using the internal user mapping system.
 
-        var nearbyAttractions = _tourGuideService.GetNearbyAttractions(user);
+        var nearbyAttractions = await _tourGuideService.GetNearbyAttractions(user);
         return Ok(nearbyAttractions);
     }
 
