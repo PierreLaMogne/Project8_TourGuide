@@ -20,4 +20,4 @@ jobs:
         run: dotnet build TourGuide.sln --configuration Debug
 
       - name: Run performance tests
-        run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName~PerformanceTest" --configuration Debug --no-build
+        run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName~PerformanceTest" --configuration Debug
