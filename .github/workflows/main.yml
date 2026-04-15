@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '0 2 * * *' # Tous les jours à 2h du matin UTC
-
+      
 jobs:
   build:
     runs-on: ubuntu-latest
