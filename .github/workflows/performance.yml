@@ -17,7 +17,7 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Build solution
-        run: dotnet build TourGuide.sln --configuration Debug
+        run: dotnet build TourGuide.sln
 
       - name: Run performance tests
-        run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName~PerformanceTest" --configuration Debug
+        run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName~PerformanceTest"
