@@ -18,7 +18,7 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Build solution
-        run: dotnet build TourGuide.sln --configuration Debug
+        run: dotnet build TourGuide.sln
 
   test_rapide:
     runs-on: ubuntu-latest
@@ -32,4 +32,4 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Run quick tests
-        run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName!~PerformanceTest" --configuration Debug
+        run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName!~PerformanceTest"
