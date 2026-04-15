@@ -32,4 +32,4 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Run quick tests
-        run: dotnet test TourGuideTest --filter "FullyQualifiedName!~PerformanceTest" --configuration Debug --no-build
+        run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName!~PerformanceTest" --configuration Debug --no-build
