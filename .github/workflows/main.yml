@@ -19,6 +19,17 @@ jobs:
 
       - name: Build solution
         run: dotnet build TourGuide.sln
+        
+      - name: Zip build artifacts
+        run: |
+          cd artifacts
+          zip -r ../artifacts.zip .
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts.zip
 
   test_rapide:
     runs-on: ubuntu-latest
