@@ -1,8 +1,6 @@
 name: Performance Tests
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # Tous les jours à 2h UTC
   workflow_dispatch:
 
 jobs:
