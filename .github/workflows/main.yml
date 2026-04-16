@@ -5,7 +5,7 @@ on:
     branches:
       - main
   workflow_dispatch:
-      
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,18 +18,7 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Build solution
-        run: dotnet build TourGuide.sln
-        
-      - name: Zip build artifacts
-        run: |
-          cd artifacts
-          zip -r ../artifacts.zip .
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: artifacts.zip
+        run: dotnet build TourGuide.sln --configuration Release
 
   test_rapide:
     runs-on: ubuntu-latest
@@ -44,3 +33,33 @@ jobs:
 
       - name: Run quick tests
         run: dotnet test TourGuideTest/TourGuideTest.csproj --filter "FullyQualifiedName!~PerformanceTest"
+
+  package_artifacts:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore and build again (Release)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Build for Release
+        run: dotnet build TourGuide.sln --configuration Release
+
+      - name: Create artifacts folder
+        run: |
+          mkdir -p artifacts
+          cp -r ./bin/Release/net7.0/* artifacts/
+
+      - name: Zip build artifacts
+        run: |
+          cd artifacts
+          zip -r ../artifacts.zip .
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts.zip
